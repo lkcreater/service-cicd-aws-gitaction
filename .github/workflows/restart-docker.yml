@@ -1,0 +1,43 @@
+name: Restart All Service
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason to restart"
+        required: true
+jobs:
+  deploy:
+    name: "Restart docker compose"
+    runs-on: ubuntu-latest
+    # needs: test
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure SSH
+        run: |
+          echo $REASON
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/bom-infra.pem
+          chmod 600 ~/.ssh/bom-infra.pem
+          cat >>~/.ssh/config <<END
+          Host bom-nonprod
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/bom-infra.pem
+            StrictHostKeyChecking no
+          Host bom-nonprod-web
+            HostName $PROXY_SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/bom-infra.pem
+            ProxyJump bom-nonprod
+            StrictHostKeyChecking no
+          END
+        env:
+          SSH_USER: ${{ secrets.USERNAME }}
+          SSH_KEY: ${{ secrets.KEY }}
+          SSH_HOST: ${{ secrets.HOST }}
+          PROXY_SSH_HOST: ${{ secrets.PROXY_HOST }}
+          REASON: ${{ github.event.inputs.reason }}
+      - name: Check
+        run: ssh -J bom-nonprod bom-nonprod-web 'whoami'
+      - name: Restart service
+        run: ssh -J bom-nonprod bom-nonprod-web 'docker-compose restart'
