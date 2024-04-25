@@ -1,0 +1,37 @@
+version: "3.9"
+services:
+  api:
+    image: 606064476606.dkr.ecr.ap-southeast-1.amazonaws.com/npa-api:#npa_api_ver#
+    container_name: api
+    ports:
+      - "3000:3000"
+  pamco_web:
+      image: 606064476606.dkr.ecr.ap-southeast-1.amazonaws.com/pamco:#pamco_ver#
+      container_name: pamco_web
+      ports:
+        - "9000:9000"
+  property-api:
+      image: 606064476606.dkr.ecr.ap-southeast-1.amazonaws.com/property-api:#property_api_ver#
+      container_name: property-api
+      ports:
+        - "3001:3001"
+  npa-cms:
+      image: 606064476606.dkr.ecr.ap-southeast-1.amazonaws.com/npa-cms:#npa_cms_ver#
+      container_name: npa-cms
+      ports:
+        - "9001:9001"
+  npa-web:
+      image: 606064476606.dkr.ecr.ap-southeast-1.amazonaws.com/npa-web:#npa_web#
+      container_name: npa-web
+      ports:
+        - "9002:9002"
+  nginx:
+      image: nginx:1.21.6
+      expose:
+        - 80
+      ports:
+        - 80:80
+      volumes:
+        - ./nginx/conf.d/:/etc/nginx/conf.d/
+      depends_on:
+        - api
